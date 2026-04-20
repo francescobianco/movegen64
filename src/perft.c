@@ -1,0 +1,72 @@
+#include "perft.h"
+#include "movegen.h"
+#include "position.h"
+#include <stdio.h>
+
+long long perft(const Pos *pos, int depth) {
+    MoveList ml;
+    gen_moves(pos, &ml);
+
+    if (depth == 1) {
+        /* count only legal moves — avoids one extra recursive call */
+        long long count = 0;
+        for (int i = 0; i < ml.count; i++) {
+            Pos next = pos_after(pos, ml.moves[i]);
+            if (!in_check(&next, pos->turn)) count++;
+        }
+        return count;
+    }
+
+    long long nodes = 0;
+    for (int i = 0; i < ml.count; i++) {
+        Pos next = pos_after(pos, ml.moves[i]);
+        if (in_check(&next, pos->turn)) continue;
+        nodes += perft(&next, depth - 1);
+    }
+    return nodes;
+}
+
+long long state64_perft(const State64 *s, int depth) {
+    MoveList ml;
+    state64_gen_moves(s, &ml);
+
+    long long nodes = 0;
+    for (int i = 0; i < ml.count; i++) {
+        if (depth == 1) {
+            nodes++;
+            continue;
+        }
+
+        State64 next;
+        state64_apply_matrix_known_legal(s, ml.moves[i], &next);
+        nodes += state64_perft(&next, depth - 1);
+    }
+    return nodes;
+}
+
+static void move_str(Move m, char *buf) {
+    static const char files[] = "abcdefgh";
+    static const char promos[] = "  nbrq";
+    buf[0] = files[file_of(m.from)];
+    buf[1] = '1' + rank_of(m.from);
+    buf[2] = files[file_of(m.to)];
+    buf[3] = '1' + rank_of(m.to);
+    buf[4] = (m.promo != NO_PIECE) ? promos[m.promo] : '\0';
+    buf[5] = '\0';
+}
+
+void perft_divide(const Pos *pos, int depth) {
+    MoveList ml;
+    gen_moves(pos, &ml);
+    long long total = 0;
+    char buf[8];
+    for (int i = 0; i < ml.count; i++) {
+        Pos next = pos_after(pos, ml.moves[i]);
+        if (in_check(&next, pos->turn)) continue;
+        long long n = (depth > 1) ? perft(&next, depth-1) : 1;
+        move_str(ml.moves[i], buf);
+        printf("  %s: %lld\n", buf, n);
+        total += n;
+    }
+    printf("total: %lld\n", total);
+}
