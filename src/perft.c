@@ -27,6 +27,11 @@ long long perft(const Pos *pos, int depth) {
 }
 
 long long state64_perft(const State64 *s, int depth) {
+    Move null_move = {0, 0, NO_PIECE, NO_PIECE, NO_PIECE, 0};
+    return state64_perft_depth(s, depth, null_move);
+}
+
+long long state64_perft_depth(const State64 *s, int depth, Move prev_move) {
     MoveList ml;
     state64_gen_moves(s, &ml);
 
@@ -38,8 +43,8 @@ long long state64_perft(const State64 *s, int depth) {
         }
 
         State64 next;
-        state64_apply_matrix_known_legal(s, ml.moves[i], &next);
-        nodes += state64_perft(&next, depth - 1);
+        state64_apply_delta(s, ml.moves[i], &next);
+        nodes += state64_perft_depth(&next, depth - 1, ml.moves[i]);
     }
     return nodes;
 }

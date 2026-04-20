@@ -816,3 +816,17 @@ bool state64_apply(const State64 *s, Move m, State64 *next, State64Undo *undo) {
 void state64_unapply(const State64Undo *undo, State64 *s) {
     *s = undo->before;
 }
+
+static BB influence_zone(int sq) {
+    return geo_mask[ROOK][sq] | geo_mask[BISHOP][sq] | bit(sq);
+}
+
+void state64_close_delta(State64 *s, Move prev_move) {
+    (void)prev_move;
+    state64_close(s);
+}
+
+void state64_apply_delta(const State64 *s, Move m, State64 *next) {
+    state64_raw_apply_known_legal(s, m, next);
+    state64_close_delta(next, m);
+}

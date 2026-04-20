@@ -47,3 +47,5 @@ bool state64_apply(const State64 *s, Move m, State64 *next, State64Undo *undo);
 void state64_unapply(const State64Undo *undo, State64 *s);
 void state64_stats_reset(void);
 State64Stats state64_stats_get(void);
+void state64_close_delta(State64 *s, Move prev_move);
+void state64_apply_delta(const State64 *s, Move m, State64 *next);
